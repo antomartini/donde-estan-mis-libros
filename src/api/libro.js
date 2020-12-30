@@ -3,6 +3,7 @@ const router = express.Router();
 
 const LibroModel = require('../models/libro');
 const Categoria = require('../models/categoria');
+const PersonaModel = require('../models/persona');
 
 //POST '/libro' recibe: {nombre:string, descripcion:string, categoria_id:numero, persona_id:numero/null}
 // devuelve 200 y {id: numero, nombre:string, descripcion:string, categoria_id:numero, persona_id:numero/null}
@@ -22,17 +23,32 @@ router.post('/', async (req, res, next) => {
             persona_id: req.body.persona_id
         });
 
-        //Validacion de categoria
+
+        const existeLibro = await LibroModel.findOne({nombre: req.body.nombre.toUpperCase()});
+        console.log("Existe Persona: ", existeLibro);
+        if (existeLibro) {
+            res.status(413).send({message:"Ese libro ya existe"});
+        }
+
+        //Validacion de categoria // no funciona
         const categoriaValida = await Categoria.findById(req.body.categoria_id);
-        if (!categoriaValida) {
+        if (!categoriaValida.id) {
             res.status(413).send({message: "La categoria no existe"});
         }
+
+        //Validacion de Persona // 
+         //Validacion de categoria // no funciona
+         const personaExiste = await PersonaModel.findById(req.body.categoria_id);
+         if (!personaExiste.id) {
+             res.status(413).send({message: "La persona indicada no existe"});
+         }
+
         const libroGuardado = await libro.save();
         res.status(200).json(libroGuardado);
 
     } catch (error) {
-        res.status(413);
-        //res.send('"ese libro ya existe", "nombre y categoria son datos obligatorios", "no existe la categoria indicada", "no existe la persona indicada"');
+        console.log("Error", error)
+        res.status(413).send("no existe la categoria indicad o no existe la persona indicada");
         next(error);
     }
 });
